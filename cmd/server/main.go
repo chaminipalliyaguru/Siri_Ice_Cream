@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("could not seed database: %v", err)
 	}
 
-	app := routes.NewApp(db)
+	app := routes.NewApp(db, cfg.JWTSecret)
 
 	log.Printf("API running on http://localhost:%s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))

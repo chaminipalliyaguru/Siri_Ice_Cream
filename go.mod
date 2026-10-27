@@ -4,6 +4,7 @@ go 1.27.3
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.16
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/ncruces/go-sqlite3/gormlite v0.34.0
 	golang.org/x/crypto v0.58.0
 	gorm.io/gorm v1.31.2
