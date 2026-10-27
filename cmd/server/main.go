@@ -6,6 +6,7 @@ import (
 
 	"siri_ice_cream/internal/config"
 	"siri_ice_cream/internal/database"
+	"siri_ice_cream/internal/routes"
 )
 
 func main() {
@@ -20,5 +21,8 @@ func main() {
 		log.Fatalf("could not seed database: %v", err)
 	}
 
-	log.Println("Database ready and seeded!")
+	app := routes.NewApp(db)
+
+	log.Printf("API running on http://localhost:%s", cfg.Port)
+	log.Fatal(app.Listen(":" + cfg.Port))
 }
