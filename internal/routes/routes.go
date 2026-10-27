@@ -13,7 +13,7 @@ import (
 )
 
 // NewApp creates the Fiber app with all routes.
-func NewApp(db *gorm.DB) *fiber.App {
+func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:      "Siri Ice Cream API",
 		ErrorHandler: errorHandler,
@@ -21,9 +21,15 @@ func NewApp(db *gorm.DB) *fiber.App {
 	app.Use(recover.New()) // turns a crash (panic) into a 500 error
 	app.Use(logger.New())  // prints each request in the console
 
+	authHandler := handlers.NewAuthHandler(db, jwtSecret)
 	categoryHandler := handlers.NewCategoryHandler(db)
 
 	api := app.Group("/api")
+
+	// Authentication
+	api.Post("/auth/login", authHandler.Login)
+
+	// Category
 	api.Get("/categories", categoryHandler.List)
 
 	return app
