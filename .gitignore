@@ -1,0 +1,11 @@
+   # database created when the app runs
+   *.db
+   *.db-journal
+
+   # built programs
+   bin/
+   *.exe
+
+   # editor folders
+   .vscode/
+   .idea/
