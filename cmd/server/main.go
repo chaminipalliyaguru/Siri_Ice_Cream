@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("could not load config: %v", err)
+	}
 
 	db, err := database.Connect(cfg.DBPath)
 	if err != nil {
