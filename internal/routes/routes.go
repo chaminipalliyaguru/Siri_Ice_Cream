@@ -26,6 +26,7 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 	blacklist := auth.NewTokenBlacklist()
 	authHandler := handlers.NewAuthHandler(db, jwtSecret, blacklist)
 	categoryHandler := handlers.NewCategoryHandler(db)
+	itemHandler := handlers.NewItemHandler(db)
 
 	requireAuth := middleware.RequireAuth(jwtSecret, blacklist)
 
@@ -41,6 +42,15 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 
 	// ---------- Categories ----------
 	protected.Get("/categories", categoryHandler.List)
+
+	// ---------- Inventory items ----------
+	items := protected.Group("/items")
+	items.Get("/", itemHandler.List)
+	items.Get("/:id", itemHandler.Get)
+	items.Post("/", itemHandler.Create)
+	items.Put("/:id", itemHandler.Update)
+	items.Patch("/:id", itemHandler.Update)
+	items.Delete("/:id", itemHandler.Delete)
 
 	return app
 }

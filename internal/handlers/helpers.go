@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -25,4 +26,13 @@ func notFoundOr(err error, what string) error {
 		return fiber.NewError(fiber.StatusNotFound, what+" not found")
 	}
 	return fiber.NewError(fiber.StatusInternalServerError, "database error")
+}
+
+// parseID reads the ":id" part of the URL and checks it is a positive number.
+func parseID(c *fiber.Ctx) (uint, error) {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil || id == 0 {
+		return 0, fiber.NewError(fiber.StatusBadRequest, "id must be a positive number")
+	}
+	return uint(id), nil
 }
