@@ -24,12 +24,7 @@ It manages **inventory items** and **customer records**, with **JWT authenticati
 4. [Role permissions](#4-role-permissions)
 5. [API endpoints](#5-api-endpoints)
 6. [Testing with Postman](#6-testing-with-postman)
-7. [Database design (ER diagram)](#7-database-design-er-diagram)
-8. [Unit tests](#8-unit-tests)
-9. [Logging](#9-logging)
-10. [Project structure](#10-project-structure)
-11. [Design decisions](#11-design-decisions)
-12. [Troubleshooting](#12-troubleshooting)
+
 
 ---
 
