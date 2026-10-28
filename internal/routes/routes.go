@@ -9,7 +9,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"gorm.io/gorm"
 
+	"siri_ice_cream/internal/auth"
 	"siri_ice_cream/internal/handlers"
+	"siri_ice_cream/internal/middleware"
 )
 
 // NewApp creates the Fiber app with all routes.
@@ -18,19 +20,27 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 		AppName:      "Siri Ice Cream API",
 		ErrorHandler: errorHandler,
 	})
-	app.Use(recover.New()) // turns a crash (panic) into a 500 error
-	app.Use(logger.New())  // prints each request in the console
+	app.Use(recover.New())
+	app.Use(logger.New())
 
-	authHandler := handlers.NewAuthHandler(db, jwtSecret)
+	blacklist := auth.NewTokenBlacklist()
+	authHandler := handlers.NewAuthHandler(db, jwtSecret, blacklist)
 	categoryHandler := handlers.NewCategoryHandler(db)
+
+	requireAuth := middleware.RequireAuth(jwtSecret, blacklist)
 
 	api := app.Group("/api")
 
-	// Authentication
-	api.Post("/auth/login", authHandler.Login)
+	// ---------- Authentication ----------
+	api.Post("/auth/login", authHandler.Login) // public: no token needed
+	api.Post("/auth/logout", requireAuth, authHandler.Logout)
+	api.Get("/auth/me", requireAuth, authHandler.Me)
 
-	// Category
-	api.Get("/categories", categoryHandler.List)
+	// Every route below this line needs a valid token.
+	protected := api.Group("", requireAuth)
+
+	// ---------- Categories ----------
+	protected.Get("/categories", categoryHandler.List)
 
 	return app
 }

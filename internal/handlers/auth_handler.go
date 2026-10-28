@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"siri_ice_cream/internal/auth"
+	"siri_ice_cream/internal/middleware"
 	"siri_ice_cream/internal/models"
 )
 
@@ -15,11 +16,12 @@ import (
 type AuthHandler struct {
 	db        *gorm.DB
 	jwtSecret string
+	blacklist *auth.TokenBlacklist
 }
 
 // NewAuthHandler creates an AuthHandler.
-func NewAuthHandler(db *gorm.DB, jwtSecret string) *AuthHandler {
-	return &AuthHandler{db: db, jwtSecret: jwtSecret}
+func NewAuthHandler(db *gorm.DB, jwtSecret string, blacklist *auth.TokenBlacklist) *AuthHandler {
+	return &AuthHandler{db: db, jwtSecret: jwtSecret, blacklist: blacklist}
 }
 
 // LoginRequest is the JSON body for POST /api/auth/login.
@@ -56,4 +58,24 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		"token": token,
 		"user":  user,
 	})
+}
+
+// Logout puts the current token on the blacklist so it cannot be used again.
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	token := c.Locals(middleware.LocalToken).(string)
+	claims := c.Locals(middleware.LocalClaims).(*auth.Claims)
+
+	h.blacklist.Add(token, claims.ExpiresAt.Time)
+	return c.JSON(fiber.Map{"message": "logged out successfully"})
+}
+
+// Me returns the currently logged-in user.
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	userID := c.Locals(middleware.LocalUserID).(uint)
+
+	var user models.User
+	if err := h.db.First(&user, userID).Error; err != nil {
+		return notFoundOr(err, "user")
+	}
+	return c.JSON(user)
 }
