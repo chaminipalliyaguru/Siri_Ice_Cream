@@ -37,7 +37,7 @@ func Load() (Config, error) {
 		AppEnv:    strings.ToLower(getEnv("APP_ENV", EnvDevelopment)),
 		Port:      getEnv("PORT", "3000"),
 		DBPath:    getEnv("DB_PATH", "siri_icecream_shop.db"),
-		JWTSecret: getEnv("JWT_SECRET", "change-this-secret-in-production"),
+		JWTSecret: getEnv("JWT_SECRET", "defaultJWTSecret"),
 	}
 
 	if err := cfg.validate(); err != nil {

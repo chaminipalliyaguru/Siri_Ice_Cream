@@ -22,6 +22,11 @@ func main() {
 	slog.SetDefault(logger)
 
 	db, err := database.Connect(cfg.DBPath)
+	if err != nil {
+		logger.Error("could not connect to database", "error", err)
+		os.Exit(1)
+	}
+
 	if err := database.Seed(db); err != nil {
 		logger.Error("could not seed database", "error", err)
 		os.Exit(1)
