@@ -64,7 +64,30 @@ func (h *CustomerHandler) Get(c *fiber.Ctx) error {
 	return c.JSON(customer)
 }
 
-//Create adds a new customer
+// Create adds a new customer
+func (h *CustomerHandler) Create(c *fiber.Ctx) error {
+	var req CreateCustomerRequest
+	if err := c.BodyParser(&req); err != nil {
+		return err
+	}
+
+	customer := models.Customer{
+		Name:  strings.TrimSpace(req.Name),
+		Email: strings.TrimSpace(req.Email),
+		Phone: strings.TrimSpace(req.phone),
+	}
+
+	if err := h.validate(customer); err != nil {
+		return err
+	}
+
+	if err := h.db.Create(&customer).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "could not create customer")
+	}
+	return c.Status(fiber.StatusCreated).JSON(customer)
+}
+
+// Update an existing customer.
 
 // validate checks the customer's fields before saving.
 func (h *CustomerHandler) validate(customer models.Customer) error {
