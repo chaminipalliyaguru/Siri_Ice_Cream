@@ -25,14 +25,14 @@ func NewCustomerHandler(db *gorm.DB) *CustomerHandler {
 type CreateCustomerRequest struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
-	phone string `json:"phone"`
+	Phone string `json:"phone"`
 }
 
 // UpdateCustomerRequest is the json body for PUT /api/customers/:id
 type UpdateCustomerRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	phone string `json:"phone"`
+	Name  *string `json:"name"`
+	Email *string `json:"email"`
+	Phone *string `json:"phone"`
 }
 
 // List returns all customers in the database.
@@ -54,7 +54,7 @@ func (h *CustomerHandler) List(c *fiber.Ctx) error {
 func (h *CustomerHandler) Get(c *fiber.Ctx) error {
 	id, err := parseID(c)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid customer ID"})
+		return err
 	}
 
 	var customer models.Customer
@@ -67,14 +67,14 @@ func (h *CustomerHandler) Get(c *fiber.Ctx) error {
 // Create adds a new customer
 func (h *CustomerHandler) Create(c *fiber.Ctx) error {
 	var req CreateCustomerRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := parseBody(c, &req); err != nil {
 		return err
 	}
 
 	customer := models.Customer{
 		Name:  strings.TrimSpace(req.Name),
-		Email: strings.TrimSpace(req.Email),
-		Phone: strings.TrimSpace(req.phone),
+		Email: strings.ToLower(strings.TrimSpace(req.Email)),
+		Phone: strings.TrimSpace(req.Phone),
 	}
 
 	if err := h.validate(customer); err != nil {
@@ -88,6 +88,42 @@ func (h *CustomerHandler) Create(c *fiber.Ctx) error {
 }
 
 // Update an existing customer.
+func (h *CustomerHandler) Update(c *fiber.Ctx) error {
+	id, err := parseID(c)
+	if err != nil {
+		return err
+	}
+
+	var customer models.Customer
+	if err := h.db.First(&customer, id).Error; err != nil {
+		return notFoundOr(err, "customer")
+	}
+
+	var req UpdateCustomerRequest
+	if err := parseBody(c, &req); err != nil {
+		return err
+	}
+
+	//copy only the fields that were sent.
+	if req.Name != nil {
+		customer.Name = strings.TrimSpace(*req.Name)
+	}
+	if req.Email != nil {
+		customer.Email = strings.ToLower(strings.TrimSpace(*req.Email))
+	}
+	if req.Phone != nil {
+		customer.Phone = strings.TrimSpace(*req.Phone)
+	}
+	if err := h.validate(customer); err != nil {
+		return err
+	}
+
+	if err := h.db.Save(&customer).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "could not update customer")
+	}
+	return c.JSON(customer)
+
+}
 
 // validate checks the customer's fields before saving.
 func (h *CustomerHandler) validate(customer models.Customer) error {
