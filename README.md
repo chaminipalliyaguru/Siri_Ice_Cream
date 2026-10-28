@@ -1,4 +1,4 @@
-# Siri Ice Cream API
+# Siri Ice Cream Shop
 
 A REST API for an ice cream shop, built with **Go + Fiber v2 + SQLite (GORM)**.
 
