@@ -3,10 +3,11 @@ package routes
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"gorm.io/gorm"
 
 	"siri_ice_cream/internal/auth"
@@ -22,13 +23,15 @@ const (
 )
 
 // NewApp creates the Fiber app with all routes.
-func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
+func NewApp(db *gorm.DB, jwtSecret string, log *slog.Logger) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:      "Siri Ice Cream API",
-		ErrorHandler: errorHandler,
+		AppName:               "Siri Ice Cream API",
+		ErrorHandler:          newErrorHandler(log),
+		DisableStartupMessage: true,
 	})
+	app.Use(requestid.New())
+	app.Use(middleware.RequestLogger(log))
 	app.Use(recover.New())
-	app.Use(logger.New())
 
 	blacklist := auth.NewTokenBlacklist()
 	authHandler := handlers.NewAuthHandler(db, jwtSecret, blacklist)
@@ -74,14 +77,22 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 }
 
 // errorHandler sends every error back as JSON: {"error": "message"}.
-func errorHandler(c *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
-	message := "internal server error"
+func newErrorHandler(log *slog.Logger) fiber.ErrorHandler {
+	return func(c *fiber.Ctx, err error) error {
+		code := fiber.StatusInternalServerError
+		message := "internal server error"
 
-	var fiberErr *fiber.Error
-	if errors.As(err, &fiberErr) {
-		code = fiberErr.Code
-		message = fiberErr.Message
+		var fiberErr *fiber.Error
+		if errors.As(err, &fiberErr) {
+			code = fiberErr.Code
+			message = fiberErr.Message
+		} else {
+			log.Error("unexpected error",
+				"request_id", c.Locals("requestid"),
+				"path", c.Path(),
+				"error", err,
+			)
+		}
+		return c.Status(code).JSON(fiber.Map{"error": message})
 	}
-	return c.Status(code).JSON(fiber.Map{"error": message})
 }

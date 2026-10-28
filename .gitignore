@@ -9,3 +9,6 @@ bin/
 # editor folders
 .vscode/
 .idea/
+
+# local settings and secrets
+.env
