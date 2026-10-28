@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"siri_ice_cream/internal/auth"
+	"siri_ice_cream/internal/models"
 )
 
 const (
@@ -39,5 +40,17 @@ func RequireAuth(secret string, blacklist *auth.TokenBlacklist) fiber.Handler {
 		c.Locals(LocalToken, token)
 		c.Locals(LocalClaims, claims)
 		return c.Next()
+	}
+}
+
+func RequireRoles(allowed ...models.Role) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		role, _ := c.Locals(LocalRole).(models.Role)
+		for _, r := range allowed {
+			if role == r {
+				return c.Next()
+			}
+		}
+		return fiber.NewError(fiber.StatusForbidden, "you do not have permission to do this")
 	}
 }

@@ -12,6 +12,13 @@ import (
 	"siri_ice_cream/internal/auth"
 	"siri_ice_cream/internal/handlers"
 	"siri_ice_cream/internal/middleware"
+	"siri_ice_cream/internal/models"
+)
+
+const (
+	owner   = models.RoleOwner
+	manager = models.RoleManager
+	cashier = models.RoleCashier
 )
 
 // NewApp creates the Fiber app with all routes.
@@ -30,6 +37,7 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 	customerHandler := handlers.NewCustomerHandler(db)
 
 	requireAuth := middleware.RequireAuth(jwtSecret, blacklist)
+	allow := middleware.RequireRoles
 
 	api := app.Group("/api")
 
@@ -46,21 +54,21 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 
 	// ---------- Inventory items ----------
 	items := protected.Group("/items")
-	items.Get("/", itemHandler.List)
-	items.Get("/:id", itemHandler.Get)
-	items.Post("/", itemHandler.Create)
-	items.Put("/:id", itemHandler.Update)
-	items.Patch("/:id", itemHandler.Update)
-	items.Delete("/:id", itemHandler.Delete)
+	items.Get("/", allow(owner, manager, cashier), itemHandler.List)
+	items.Get("/:id", allow(owner, manager, cashier), itemHandler.Get)
+	items.Post("/", allow(owner, manager), itemHandler.Create)
+	items.Put("/:id", allow(owner, manager, cashier), itemHandler.Update)
+	items.Patch("/:id", allow(owner, manager, cashier), itemHandler.Update)
+	items.Delete("/:id", allow(owner), itemHandler.Delete)
 
 	// ---------- Customers ----------
 	customers := protected.Group("/customers")
-	customers.Get("/", customerHandler.List)
-	customers.Get("/:id", customerHandler.Get)
-	customers.Post("/", customerHandler.Create)
-	customers.Put("/:id", customerHandler.Update)
-	customers.Patch("/:id", customerHandler.Update)
-	customers.Delete("/:id", customerHandler.Delete)
+	customers.Get("/", allow(owner, manager, cashier), customerHandler.List)
+	customers.Get("/:id", allow(owner, manager, cashier), customerHandler.Get)
+	customers.Post("/", allow(owner, manager, cashier), customerHandler.Create)
+	customers.Put("/:id", allow(owner, manager, cashier), customerHandler.Update)
+	customers.Patch("/:id", allow(owner, manager, cashier), customerHandler.Update)
+	customers.Delete("/:id", allow(owner), customerHandler.Delete)
 
 	return app
 }

@@ -88,7 +88,7 @@ func (h *ItemHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(item)
 }
 
-// Update changes an existing item. Works for both PUT and PATCH.
+// Update changes an existing item.
 func (h *ItemHandler) Update(c *fiber.Ctx) error {
 	id, err := parseID(c)
 	if err != nil {
