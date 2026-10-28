@@ -12,7 +12,6 @@ import (
 )
 
 // Connect opens the SQLite database at the given path and creates the tables.
-// Use ":memory:" as the path for a temporary in-memory database (used in tests).
 func Connect(path string) (*gorm.DB, error) {
 	// foreign_keys(1) turns on foreign key checks in SQLite.
 	dsn := fmt.Sprintf("file:%s?_pragma=foreign_keys(1)", path)

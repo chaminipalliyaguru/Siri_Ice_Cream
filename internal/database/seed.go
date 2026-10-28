@@ -10,8 +10,6 @@ import (
 )
 
 // Seed inserts the starting data (users, categories and a few items).
-// It only adds data when the users table is empty, so it is safe to run
-// every time the server starts.
 func Seed(db *gorm.DB) error {
 	var count int64
 	if err := db.Model(&models.User{}).Count(&count).Error; err != nil {
