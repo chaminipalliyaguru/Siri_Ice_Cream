@@ -122,7 +122,23 @@ func (h *CustomerHandler) Update(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "could not update customer")
 	}
 	return c.JSON(customer)
+}
 
+// Delete removes a customer.
+func (h *CustomerHandler) Delete(c *fiber.Ctx) error {
+	id, err := parseID(c)
+	if err != nil {
+		return err
+	}
+
+	result := h.db.Delete(&models.Customer{}, id)
+	if result.Error != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "could not delete customer")
+	}
+	if result.RowsAffected == 0 {
+		return fiber.NewError(fiber.StatusNotFound, "customer not found")
+	}
+	return c.JSON(fiber.Map{"message": "customer deleted"})
 }
 
 // validate checks the customer's fields before saving.

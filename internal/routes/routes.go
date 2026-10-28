@@ -27,6 +27,7 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 	authHandler := handlers.NewAuthHandler(db, jwtSecret, blacklist)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	itemHandler := handlers.NewItemHandler(db)
+	customerHandler := handlers.NewCustomerHandler(db)
 
 	requireAuth := middleware.RequireAuth(jwtSecret, blacklist)
 
@@ -51,6 +52,15 @@ func NewApp(db *gorm.DB, jwtSecret string) *fiber.App {
 	items.Put("/:id", itemHandler.Update)
 	items.Patch("/:id", itemHandler.Update)
 	items.Delete("/:id", itemHandler.Delete)
+
+	// ---------- Customers ----------
+	customers := protected.Group("/customers")
+	customers.Get("/", customerHandler.List)
+	customers.Get("/:id", customerHandler.Get)
+	customers.Post("/", customerHandler.Create)
+	customers.Put("/:id", customerHandler.Update)
+	customers.Patch("/:id", customerHandler.Update)
+	customers.Delete("/:id", customerHandler.Delete)
 
 	return app
 }
