@@ -14,6 +14,7 @@ It manages **inventory items** and **customer records**, with **JWT authenticati
 - Structured logging (`log/slog`) with a request ID on every request
 - 32 automated tests and a Postman collection with 74 automatic checks
 - ER diagram of the database
+- **Bonus:** a C# WPF desktop app (.NET 10) that uses the API (section 13)
 
 ---
 
