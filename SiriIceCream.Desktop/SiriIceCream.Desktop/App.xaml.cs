@@ -9,6 +9,7 @@ namespace SiriIceCream.Desktop;
 
 public partial class App : Application
 {
+    private readonly IDialogService _dialogs = new MessageBoxDialogService();
     private IApiClient _api = null!;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -29,16 +30,30 @@ public partial class App : Application
     {
         var viewModel = new LoginViewModel(_api, message);
         var window = new LoginWindow(viewModel);
-        viewModel.LoggedIn += session => OnLoggedIn(session);
+
+        viewModel.LoggedIn += session =>
+        {
+            ShowMain(session);   // open the main window first ...
+            window.Close();      // ... then close this one, so the app keeps running
+        };
+
         window.Show();
     }
 
-    /// Called after a successful login.
-    private static void OnLoggedIn(Session session)
+    /// <summary>Opens the main window for the signed-in user.</summary>
+    private void ShowMain(Session session)
     {
-        MessageBox.Show(
-            $"Welcome, {session.User.Name}!\nYou are signed in as {session.RoleDisplayName}.",
-            "Signed in", MessageBoxButton.OK, MessageBoxImage.Information);
+        var viewModel = new MainViewModel(_api, session, _dialogs);
+        var window = new MainWindow(viewModel);
+
+        viewModel.LoggedOut += message =>
+        {
+            ShowLogin(message);
+            window.Close();
+        };
+
+        window.Show();
+        _ = viewModel.InitializeAsync(); // load the page data
     }
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
