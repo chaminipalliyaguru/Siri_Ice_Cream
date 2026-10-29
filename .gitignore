@@ -12,3 +12,8 @@ bin/
 
 # local settings and secrets
 .env
+
+# Visual Studio build and settings folders
+obj/
+.vs/
+*.user
