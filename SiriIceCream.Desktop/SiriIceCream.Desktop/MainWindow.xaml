@@ -55,18 +55,8 @@
             <views:ItemsView />
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
-            <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Width="420" Padding="32">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="&#xE823;" FontFamily="{StaticResource IconFont}" FontSize="36"
-                               Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}"
-                               HorizontalAlignment="Center" Margin="0,14,0,6" />
-                    <TextBlock Text="{Binding Message}" Style="{StaticResource HintText}"
-                               TextAlignment="Center" FontSize="13" />
-                </StackPanel>
-            </Border>
+        <DataTemplate DataType="{x:Type vm:CustomersViewModel}">
+            <views:CustomersView />
         </DataTemplate>
     </Window.Resources>
 
