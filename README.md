@@ -12,9 +12,9 @@ It manages **inventory items** and **customer records**, with **JWT authenticati
 - Input validation with clear error messages, one JSON error format
 - Settings from a `.env` file, validated at startup
 - Structured logging (`log/slog`) with a request ID on every request
-- 32 automated tests and a Postman collection with 74 automatic checks
+- 34 automated tests and a Postman collection with 74 automatic checks
 - ER diagram of the database
-- **Bonus:** a C# WPF desktop app (.NET 10) that uses the API (section 13)
+- **Bonus:** a C# WPF desktop app (.NET 10) that uses the API ([section 10](#10-desktop-app-wpf-bonus))
 
 ---
 
@@ -25,6 +25,9 @@ It manages **inventory items** and **customer records**, with **JWT authenticati
 4. [Role permissions](#4-role-permissions)
 5. [API endpoints](#5-api-endpoints)
 6. [Testing with Postman](#6-testing-with-postman)
+7. [Project structure](#9-project-structure)
+8. [Desktop app (WPF, bonus)](#10-desktop-app-wpf-bonus)
+9. [Demo video](#11-demo-video)
 
 
 ---
@@ -290,4 +293,84 @@ The requests run in order and every one checks its own status code and response
 Collection variables (filled in automatically): `baseUrl` (default `http://localhost:3000`),
 `token`, `ownerToken`, `managerToken`, `cashierToken`, `itemId`, `customerId`, `customerEmail`.
 To use another address (for example a Codespaces URL), change `baseUrl`.
+
+
+## 7. Project structure
+
+The backend follows the standard Go project layout: `cmd/` holds the program to run,
+`internal/` holds the application code, and each test file sits next to the code it tests.
+
+```
+Siri_Ice_Cream/
+├── cmd/server/main.go        # starts the app: config → database → seed → web server
+├── internal/
+│   ├── auth/                 # JWT tokens and the logout blacklist
+│   ├── config/               # reads and checks the settings (.env)
+│   ├── database/             # SQLite connection and the seeder
+│   ├── handlers/             # the work behind each endpoint (auth, items, customers, categories)
+│   ├── logging/              # structured logger (log/slog)
+│   ├── middleware/           # JWT check, role check, request logging
+│   ├── models/               # User, Category, Item, Customer
+│   └── routes/               # URLs → handlers + role rules, and the API tests
+├── docs/
+│   └── SiriIceCream.postman_collection.json
+├── SiriIceCream.Desktop/     # bonus: WPF desktop app (section 10)
+├── .env.example              # the settings, without real secrets
+├── go.mod / go.sum
+└── README.md
+```
+
+## 8. Desktop app (WPF)
+
+A Windows desktop app that uses the API, built with **C# WPF on .NET 10** using the **MVVM** pattern.
+It needs no extra NuGet packages.
+
+### Requirements
+
+- Windows 10 or 11
+- Visual Studio 2022 or newer with the **.NET desktop development** workload
+- The .NET 10 SDK
+- The backend running (section 2)
+
+### How to run
+
+1. Start the backend (`go run ./cmd/server`).
+2. Set the API address in `SiriIceCream.Desktop/SiriIceCream.Desktop/appsettings.json`:
+   ```json
+   { "ApiBaseUrl": "http://localhost:3000" }
+   ```
+3. Open `SiriIceCream.Desktop/SiriIceCream.Desktop.slnx` in Visual Studio and press **F5**.
+4. Sign in with one of the seeded accounts (section 3). The **Owner / Manager / Cashier** buttons
+   on the login screen fill them in for you.
+
+### Screens and features
+
+| Screen | What you can do |
+|---|---|
+| Login | Sign in, show / hide the password, Caps Lock warning, demo account buttons, clear error messages |
+| Inventory | Summary cards (items, units in stock, low stock, stock value), search by name, coloured stock status (in stock / low stock under 10 / out of stock), add, edit and delete items |
+| Customers | Summary cards (customers, with / without a phone number), search by name, avatars with initials, add, edit and delete customers |
+
+**Roles in the app.** The app only shows what each role may use, following the table in section 4:
+a Cashier does not see the stock value or the **New item** button, and only the Owner sees the **Delete** buttons.
+The API still checks every request, so the rules hold even outside the app.
+
+**Validation and errors.**
+- **Forms:** they are checked before anything is sent (required name, valid email, price greater than 0, quantity not negative). Each problem gets its own message, and what the user typed stays in the form.
+- **Messages:** success messages hide themselves after a moment. Error messages stay until the next action.
+- **Server problems:** if the server cannot be reached, the app shows a friendly message instead of crashing.
+- **Expired login:** if the login has expired, the app returns to the sign-in screen.
+
+### How the code is organised
+
+| Folder | Contents |
+|---|---|
+| `Views/` | The screens (XAML): login window, Inventory, Customers |
+| `ViewModels/` | Screen logic and commands, one per screen, plus shared base classes |
+| `Models/` | Data from the API (User, Item, Category, Customer) |
+| `Services/` | `ApiClient` (HttpClient + JWT), `Session` (who is logged in, role rules), settings, dialogs |
+| `Commands/` | `RelayCommand` and `AsyncRelayCommand` for buttons |
+| `Helpers/` | Small shared helpers (initials for avatars) |
+| `Resources/Styles.xaml` | One shared design system: colours, buttons, inputs, cards, tables |
+
 
