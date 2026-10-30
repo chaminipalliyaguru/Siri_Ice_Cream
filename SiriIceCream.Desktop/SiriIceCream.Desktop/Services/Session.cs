@@ -1,3 +1,4 @@
+using SiriIceCream.Desktop.Helpers;
 using SiriIceCream.Desktop.Models;
 
 namespace SiriIceCream.Desktop.Services;
@@ -29,19 +30,7 @@ public class Session
     /// Up to two letters for the avatar circle:
     /// "Shop Cashier" -> "SC", "Nimal" -> "N", "" -> "?".
     /// </summary>
-    public string Initials
-    {
-        get
-        {
-            var words = User.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return words.Length switch
-            {
-                0 => "?",
-                1 => words[0][..1].ToUpper(),
-                _ => (words[0][..1] + words[^1][..1]).ToUpper(),
-            };
-        }
-    }
+    public string Initials => NameHelper.Initials(User.Name);
 
     // Items: owner and manager add, everyone edits, only owner deletes.
     public bool CanAddItem => Role is Owner or Manager;

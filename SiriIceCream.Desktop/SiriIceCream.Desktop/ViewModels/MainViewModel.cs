@@ -19,10 +19,12 @@ public class MainViewModel : ViewModelBase
         // The pages of the app.
         Inventory = new ItemsViewModel(api, session, dialogs);
         InventoryPage = Inventory;
-        CustomersPage = new PlaceholderViewModel("Customers", "The customers screen is added in the next step.");
+        Customers = new CustomersViewModel(api, session, dialogs);
+        CustomersPage = Customers;
 
         // If a page finds that the login has expired, end the session.
         Inventory.SessionExpired += () => EndSession(Messages.SessionExpired);
+        Customers.SessionExpired += () => EndSession(Messages.SessionExpired);
         _currentPage = InventoryPage;
 
         ShowInventoryCommand = new RelayCommand(() => NavigateTo(InventoryPage));
@@ -40,6 +42,9 @@ public class MainViewModel : ViewModelBase
 
     /// <summary>The Inventory screen.</summary>
     public ItemsViewModel Inventory { get; }
+
+    /// <summary>The Customers screen.</summary>
+    public CustomersViewModel Customers { get; }
 
     public object InventoryPage { get; }
     public object CustomersPage { get; }
@@ -83,12 +88,13 @@ public class MainViewModel : ViewModelBase
     public string Initials => _session.Initials;
     public string ServerDisplay => _api.BaseUrl;
 
-    // ---------------- Actions ----------------
+    // Actions 
 
     /// <summary>Loads the data for the pages when the window opens.</summary>
     public async Task InitializeAsync()
     {
         await Inventory.LoadAsync();
+        await Customers.LoadAsync();
     }
 
     private void NavigateTo(object page)
