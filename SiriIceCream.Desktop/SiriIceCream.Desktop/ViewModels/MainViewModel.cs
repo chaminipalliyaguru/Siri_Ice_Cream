@@ -3,7 +3,7 @@ using SiriIceCream.Desktop.Services;
 
 namespace SiriIceCream.Desktop.ViewModels;
 
-/// Logic for the main window.
+/// Logic for the main window
 public class MainViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
@@ -16,9 +16,13 @@ public class MainViewModel : ViewModelBase
         _api = api;
         _session = session;
 
-        // The pages of the app. The real screens replace these placeholders in the next steps.
-        InventoryPage = new PlaceholderViewModel("Inventory", "The inventory screen is added in the next step.");
-        CustomersPage = new PlaceholderViewModel("Customers", "The customers screen is added in a later step.");
+        // The pages of the app.
+        Inventory = new ItemsViewModel(api, session, dialogs);
+        InventoryPage = Inventory;
+        CustomersPage = new PlaceholderViewModel("Customers", "The customers screen is added in the next step.");
+
+        // If a page finds that the login has expired, end the session.
+        Inventory.SessionExpired += () => EndSession(Messages.SessionExpired);
         _currentPage = InventoryPage;
 
         ShowInventoryCommand = new RelayCommand(() => NavigateTo(InventoryPage));
@@ -26,10 +30,16 @@ public class MainViewModel : ViewModelBase
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
     }
 
+    /// <summary>
     /// Raised when the user signs out or the session expires.
+    /// The text (may be null) is shown on the sign-in screen.
+    /// </summary>
     public event Action<string?>? LoggedOut;
 
-    // ---------------- Pages and navigation ----------------
+    // Pages and navigation 
+
+    /// <summary>The Inventory screen.</summary>
+    public ItemsViewModel Inventory { get; }
 
     public object InventoryPage { get; }
     public object CustomersPage { get; }
@@ -50,10 +60,10 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    /// <summary>True when Inventory is shown (highlights the menu item).</summary>
+    /// <summary>True when Inventory is shown.</summary>
     public bool IsInventoryActive => CurrentPage == InventoryPage;
 
-    /// <summary>True when Customers is shown (highlights the menu item).</summary>
+    /// <summary>True when Customers is shown.</summary>
     public bool IsCustomersActive => CurrentPage == CustomersPage;
 
     public string PageTitle => IsInventoryActive ? "Inventory" : "Customers";
@@ -76,10 +86,9 @@ public class MainViewModel : ViewModelBase
     // ---------------- Actions ----------------
 
     /// <summary>Loads the data for the pages when the window opens.</summary>
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
-        // The Inventory and Customers screens load their data here (added in the next steps).
-        return Task.CompletedTask;
+        await Inventory.LoadAsync();
     }
 
     private void NavigateTo(object page)

@@ -200,8 +200,9 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="8"
                             SnapsToDevicePixels="True">
+                        <!-- No Margin here: a TextBox / PasswordBox applies its Padding itself.
+                             Adding Margin="{TemplateBinding Padding}" would apply it twice. -->
                         <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="{TemplateBinding Padding}"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                       Focusable="False"
                                       HorizontalScrollBarVisibility="Hidden"
@@ -245,7 +246,6 @@
                             CornerRadius="8"
                             SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="{TemplateBinding Padding}"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                       Focusable="False"
                                       HorizontalScrollBarVisibility="Hidden"

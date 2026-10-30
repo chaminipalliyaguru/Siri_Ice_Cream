@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:SiriIceCream.Desktop.ViewModels"
+        xmlns:views="clr-namespace:SiriIceCream.Desktop.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="Siri Ice Cream"
@@ -50,6 +51,10 @@
         </Style>
 
         <!-- How each kind of page is shown in the main area -->
+        <DataTemplate DataType="{x:Type vm:ItemsViewModel}">
+            <views:ItemsView />
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
             <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Width="420" Padding="32">
