@@ -98,3 +98,14 @@ func TestBlacklistRemovesExpiredTokens(t *testing.T) {
 		t.Error("new token should still be on the blacklist")
 	}
 }
+
+func TestTokensAreUniqueEvenInTheSameSecond(t *testing.T) {
+	user := models.User{ID: 1, Username: "owner", Role: models.RoleOwner}
+
+	first, _ := GenerateToken(user, "secret")
+	second, _ := GenerateToken(user, "secret")
+
+	if first == second {
+		t.Error("two logins created the same token; a logged-out token would block the next login")
+	}
+}

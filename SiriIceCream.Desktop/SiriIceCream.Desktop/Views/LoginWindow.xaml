@@ -71,20 +71,39 @@
             <TextBox x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
 
             <TextBlock Text="Password" Style="{StaticResource FieldLabel}" />
-            <!-- PasswordBox cannot use data binding; the code-behind copies the password. -->
-            <PasswordBox x:Name="PasswordBox"
-                         PasswordChanged="PasswordBox_PasswordChanged"
+            <!-- The password box and a normal text box sit in the same place. The eye button
+                 swaps them, so the password can be shown as plain text and hidden again.
+                 PasswordBox cannot use data binding; the code-behind copies the password. -->
+            <Grid>
+                <PasswordBox x:Name="PasswordBox" Padding="10,0,42,0"
+                             PasswordChanged="PasswordBox_PasswordChanged"
+                             KeyUp="PasswordBox_KeyUp"
+                             GotKeyboardFocus="PasswordBox_FocusChanged"
+                             LostKeyboardFocus="PasswordBox_FocusChanged" />
+                <TextBox x:Name="PasswordTextBox" Padding="10,0,42,0" Visibility="Collapsed"
+                         TextChanged="PasswordTextBox_TextChanged"
                          KeyUp="PasswordBox_KeyUp"
                          GotKeyboardFocus="PasswordBox_FocusChanged"
                          LostKeyboardFocus="PasswordBox_FocusChanged" />
+                <Button x:Name="ShowPasswordButton" Click="ShowPasswordButton_Click"
+                        HorizontalAlignment="Right" Width="38" Margin="0,1,1,1"
+                        Cursor="Hand" ToolTip="Show password" Focusable="False">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <!-- Eye icon; the code-behind switches it to "eye crossed out" while visible -->
+                    <TextBlock x:Name="ShowPasswordIcon" Text="&#xE7B3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                               FontSize="15" Foreground="{StaticResource MutedBrush}" />
+                </Button>
+            </Grid>
             <TextBlock x:Name="CapsLockWarning" Text="⚠ Caps Lock is on"
                        Foreground="{StaticResource WarningBrush}" FontSize="12" Margin="0,6,0,0"
                        Visibility="Collapsed" />
 
-            <TextBlock Text="Server address" Style="{StaticResource FieldLabel}" />
-            <TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" FontSize="12"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     ToolTip="The address of the Siri Ice Cream backend, e.g. http://localhost:3000" />
 
             <!-- Sign in. The text changes to "Signing in…" while waiting for the server. -->
             <Button Command="{Binding LoginCommand}" IsDefault="True"

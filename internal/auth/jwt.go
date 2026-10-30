@@ -2,6 +2,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -22,11 +24,20 @@ type Claims struct {
 
 // GenerateToken creates a signed JWT token for the given user.
 func GenerateToken(user models.User, secret string) (string, error) {
+	id, err := newTokenID()
+	if err != nil {
+		return "", err
+	}
+
 	now := time.Now()
 	claims := Claims{
 		UserID: user.ID,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
+			// A random ID makes every token unique. Without it, two logins of the
+			// same user in the same second would create the same token, and if the
+			// first one was logged out, the new one would be rejected too.
+			ID:        id,
 			Subject:   user.Username,
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(TokenLifetime)),
@@ -34,6 +45,15 @@ func GenerateToken(user models.User, secret string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+// newTokenID returns 16 random bytes as hex text (the JWT "jti" claim).
+func newTokenID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // ParseToken checks the token's signature and expiry and returns its claims.

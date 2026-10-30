@@ -184,3 +184,23 @@ func TestRolePermissions(t *testing.T) {
 		})
 	}
 }
+
+// Logging out must only block that one token: signing in again (as the same
+// user or another user) must give a token that works.
+func TestLoginAgainAfterLogout(t *testing.T) {
+	app := setupApp(t)
+
+	for _, user := range []string{"owner", "cashier", "owner", "owner", "manager"} {
+		token := login(t, app, user, user+"123")
+
+		status, _ := request(t, app, http.MethodGet, "/api/items", token, nil)
+		if status != http.StatusOK {
+			t.Fatalf("%s after a previous logout: got %d, want 200", user, status)
+		}
+
+		status, _ = request(t, app, http.MethodPost, "/api/auth/logout", token, nil)
+		if status != http.StatusOK {
+			t.Fatalf("%s logout: got %d, want 200", user, status)
+		}
+	}
+}

@@ -53,7 +53,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />  <!-- summary cards -->
             <RowDefinition Height="Auto" />  <!-- caption under the cards -->
-            <RowDefinition Height="Auto" />  <!-- what this role may do -->
             <RowDefinition Height="Auto" />  <!-- search bar and New customer -->
             <RowDefinition Height="Auto" />  <!-- messages -->
             <RowDefinition Height="*" />     <!-- table and form -->
@@ -109,18 +108,10 @@
 
         <TextBlock Grid.Row="1" Text="{Binding SummaryCaption}" Style="{StaticResource HintText}" Margin="2,10,0,14" />
 
-        <!-- ================= ROLE HINT ================= -->
-        <Border Grid.Row="2" Style="{StaticResource InfoBox}">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}" Foreground="{StaticResource InfoBrush}"
-                           VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBlock Text="{Binding PermissionHint}" Foreground="{StaticResource InfoBrush}" TextWrapping="Wrap" />
-            </StackPanel>
-        </Border>
-
         <!-- ================= SEARCH BAR ================= -->
-        <DockPanel Grid.Row="3" Margin="0,2,0,14">
-            <Button DockPanel.Dock="Right" Command="{Binding NewCommand}" Style="{StaticResource PrimaryButton}" Margin="0">
+        <DockPanel Grid.Row="2" Margin="0,2,0,14">
+            <Button DockPanel.Dock="Right" Command="{Binding NewCommand}" Style="{StaticResource PrimaryButton}" Margin="0"
+                    Visibility="{Binding CanAddCustomers, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE710;" Style="{StaticResource ButtonIcon}" />
                     <TextBlock Text="New customer" />
@@ -162,7 +153,7 @@
         </DockPanel>
 
         <!-- ================= MESSAGES ================= -->
-        <StackPanel Grid.Row="4">
+        <StackPanel Grid.Row="3">
             <Border Style="{StaticResource ErrorBox}"
                     Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel Orientation="Horizontal">
@@ -182,7 +173,7 @@
         </StackPanel>
 
         <!-- ================= TABLE + FORM ================= -->
-        <Grid Grid.Row="5">
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="350" />
@@ -279,7 +270,28 @@
             <!-- Form card -->
             <Grid Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top">
                 <Border Style="{StaticResource Card}" />
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="22,20">
+                <!-- Shown instead of the form when this role cannot add and nothing is selected -->
+                <StackPanel Margin="22,28" HorizontalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowForm}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="&#xE70F;" FontFamily="{StaticResource IconFont}" FontSize="28"
+                               Foreground="{StaticResource BorderStrongBrush}" HorizontalAlignment="Center" />
+                    <TextBlock Text="Edit a customer" Style="{StaticResource SectionTitle}"
+                               HorizontalAlignment="Center" Margin="0,12,0,4" />
+                    <TextBlock Text="Select a row in the table to change its details."
+                               Style="{StaticResource HintText}" TextAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="22,20"
+                              Visibility="{Binding ShowForm, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding FormSubtitle}" Style="{StaticResource HintText}" />
@@ -304,8 +316,8 @@
                                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
 
-                        <!-- Delete (only when a customer is selected) -->
-                        <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                        <!-- Delete (only for owners, when a customer is selected) -->
+                        <StackPanel Visibility="{Binding ShowDeleteButton, Converter={StaticResource BoolToVisibility}}">
                             <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,20,0,16" />
                             <Button Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}"
                                     HorizontalAlignment="Left" Margin="0">

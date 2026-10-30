@@ -12,6 +12,7 @@ namespace SiriIceCream.Desktop.Views;
 public partial class LoginWindow : Window
 {
     private readonly LoginViewModel _viewModel;
+    private bool _syncingPassword; // true while one password box updates the other
 
     public LoginWindow(LoginViewModel viewModel)
     {
@@ -25,6 +26,46 @@ public partial class LoginWindow : Window
     private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
     {
         _viewModel.Password = PasswordBox.Password;
+        if (!_syncingPassword)
+        {
+            _syncingPassword = true;
+            PasswordTextBox.Text = PasswordBox.Password;
+            _syncingPassword = false;
+        }
+    }
+
+    // Typing while the password is shown as text: keep the PasswordBox up to date.
+    private void PasswordTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_syncingPassword)
+        {
+            _syncingPassword = true;
+            PasswordBox.Password = PasswordTextBox.Text;
+            _viewModel.Password = PasswordTextBox.Text;
+            _syncingPassword = false;
+        }
+    }
+
+    // The eye button: show the password as plain text, or hide it again.
+    private void ShowPasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        bool show = PasswordTextBox.Visibility != Visibility.Visible;
+
+        PasswordTextBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        PasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        ShowPasswordIcon.Text = show ? "\uED1A" : "\uE7B3"; // eye crossed out / eye
+        ShowPasswordButton.ToolTip = show ? "Hide password" : "Show password";
+
+        // Keep typing where the user was.
+        if (show)
+        {
+            PasswordTextBox.Focus();
+            PasswordTextBox.CaretIndex = PasswordTextBox.Text.Length;
+        }
+        else
+        {
+            PasswordBox.Focus();
+        }
     }
 
     // Show "Caps Lock is on" while typing the password with Caps Lock on.
@@ -34,7 +75,8 @@ public partial class LoginWindow : Window
 
     private void UpdateCapsLockWarning()
     {
-        bool show = PasswordBox.IsKeyboardFocused && Keyboard.IsKeyToggled(Key.CapsLock);
+        bool typingPassword = PasswordBox.IsKeyboardFocused || PasswordTextBox.IsKeyboardFocused;
+        bool show = typingPassword && Keyboard.IsKeyToggled(Key.CapsLock);
         CapsLockWarning.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -45,7 +87,14 @@ public partial class LoginWindow : Window
         {
             _viewModel.Username = username;
             PasswordBox.Password = username + "123";
-            PasswordBox.Focus();
+            if (PasswordTextBox.IsVisible)
+            {
+                PasswordTextBox.Focus();
+            }
+            else
+            {
+                PasswordBox.Focus();
+            }
         }
     }
 }
