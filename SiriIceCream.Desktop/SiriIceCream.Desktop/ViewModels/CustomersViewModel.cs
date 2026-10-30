@@ -91,13 +91,17 @@ public class CustomersViewModel : ScreenViewModelBase
         ? "Change the details and click Save."
         : "Fill in the details and click Save.";
 
-    /// <summary>Explains what the logged-in role may do on this screen.</summary>
-    public string PermissionHint => _session.Role switch
-    {
-        Session.Owner => "Owner: you can view, add, edit and delete customers.",
-        Session.Manager => "Manager: you can view, add and edit customers. Deleting customers is not allowed.",
-        _ => "Cashier: you can view, add and edit customers. Deleting customers is not allowed.",
-    };
+    // ---------------- What this role can see ----------------
+    // Buttons the user is not allowed to use are hidden, not just blocked.
+
+    /// <summary>The "New customer" button (every role may add customers).</summary>
+    public bool CanAddCustomers => _session.CanAddCustomer;
+
+    /// <summary>The form is shown while editing, or for roles that may add customers.</summary>
+    public bool ShowForm => IsEditing || _session.CanAddCustomer;
+
+    /// <summary>The "Delete customer" button (owners, while a customer is selected).</summary>
+    public bool ShowDeleteButton => IsEditing && _session.CanDeleteCustomer;
 
     // ---------------- Commands (bound to buttons) ----------------
 
@@ -190,11 +194,7 @@ public class CustomersViewModel : ScreenViewModelBase
 
         if (ok && saved != null)
         {
-            SelectedCustomer = Customers.FirstOrDefault(c => c.Id == saved.Id);
-            if (SelectedCustomer == null)
-            {
-                LoadIntoForm(saved); // saved, but hidden by the current search
-            }
+            ClearForm(); // done: empty the form, ready for the next one
             ShowStatus(wasEditing ? $"Customer \"{saved.Name}\" was updated." : $"Customer \"{saved.Name}\" was added.");
         }
     }
@@ -284,6 +284,8 @@ public class CustomersViewModel : ScreenViewModelBase
         OnPropertyChanged(nameof(IsEditing));
         OnPropertyChanged(nameof(FormTitle));
         OnPropertyChanged(nameof(FormSubtitle));
+        OnPropertyChanged(nameof(ShowForm));
+        OnPropertyChanged(nameof(ShowDeleteButton));
     }
 
     /// <summary>

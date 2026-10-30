@@ -12,6 +12,10 @@ public abstract class ScreenViewModelBase : ViewModelBase
     private string _errorMessage = "";
     private string _statusMessage = "";
     private bool _isBusy;
+    private int _statusVersion; // changes every time a new green message is shown
+
+    /// <summary>How long a green success message stays on screen.</summary>
+    public static TimeSpan StatusDisplayTime { get; set; } = TimeSpan.FromSeconds(1);
 
     /// <summary>Raised when the API says the login is no longer valid (401).</summary>
     public event Action? SessionExpired;
@@ -56,11 +60,25 @@ public abstract class ScreenViewModelBase : ViewModelBase
         ErrorMessage = message;
     }
 
-    /// <summary>Shows a green success message (and hides the red one).</summary>
+    /// <summary>
+    /// Shows a green success message (and hides the red one).
+    /// The message disappears by itself after StatusDisplayTime.
+    /// </summary>
     protected void ShowStatus(string message)
     {
         ErrorMessage = "";
         StatusMessage = message;
+        _ = HideStatusLaterAsync(++_statusVersion);
+    }
+
+    /// <summary>Waits, then hides the message, unless a newer message was shown meanwhile.</summary>
+    private async Task HideStatusLaterAsync(int version)
+    {
+        await Task.Delay(StatusDisplayTime);
+        if (version == _statusVersion)
+        {
+            StatusMessage = "";
+        }
     }
 
     protected void ClearMessages()

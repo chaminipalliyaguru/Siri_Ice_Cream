@@ -37,6 +37,9 @@ public class Session
     public bool CanEditItem => Role is Owner or Manager or Cashier;
     public bool CanDeleteItem => Role is Owner;
 
+    // The total stock value is business information for owners and managers only.
+    public bool CanSeeStockValue => Role is Owner or Manager;
+
     // Customers: everyone adds and edits, only owner deletes.
     public bool CanAddCustomer => Role is Owner or Manager or Cashier;
     public bool CanEditCustomer => Role is Owner or Manager or Cashier;

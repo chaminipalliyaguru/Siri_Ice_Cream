@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,7 +21,10 @@ func (b *TokenBlacklist) Add(token string, expiresAt time.Time) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.removeExpired()
-	b.tokens[token] = expiresAt
+	// Store a copy of the text. Fiber reuses the memory of a request for the
+	// next request, so without the copy the saved token would later change into
+	// another request's token (and that new token would look logged out).
+	b.tokens[strings.Clone(token)] = expiresAt
 }
 
 // Contains reports whether the token has been logged out.

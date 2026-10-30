@@ -7,7 +7,6 @@ namespace SiriIceCream.Desktop.ViewModels;
 public class LoginViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
-    private string _serverUrl;
     private string _username = "";
     private string _password = "";
     private string _errorMessage = "";
@@ -16,7 +15,6 @@ public class LoginViewModel : ViewModelBase
     public LoginViewModel(IApiClient api, string? message = null)
     {
         _api = api;
-        _serverUrl = api.BaseUrl;
         _errorMessage = message ?? "";
         LoginCommand = new AsyncRelayCommand(LoginAsync);
     }
@@ -25,13 +23,6 @@ public class LoginViewModel : ViewModelBase
     public event Action<Session>? LoggedIn;
 
     public AsyncRelayCommand LoginCommand { get; }
-
-    /// <summary>Address of the backend (can be changed on the login screen).</summary>
-    public string ServerUrl
-    {
-        get => _serverUrl;
-        set => SetProperty(ref _serverUrl, value);
-    }
 
     public string Username
     {
@@ -81,7 +72,6 @@ public class LoginViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            _api.BaseUrl = ServerUrl.Trim();
             var result = await _api.LoginAsync(Username.Trim(), Password);
             LoggedIn?.Invoke(new Session(result.User));
         }
@@ -97,15 +87,6 @@ public class LoginViewModel : ViewModelBase
 
     private string? Validate()
     {
-        if (string.IsNullOrWhiteSpace(ServerUrl))
-        {
-            return "Please enter the server address.";
-        }
-        if (!Uri.TryCreate(ServerUrl.Trim(), UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            return "The server address must start with http:// or https://";
-        }
         if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrEmpty(Password))
         {
             return "Please enter your username and password.";

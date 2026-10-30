@@ -94,13 +94,20 @@ public class ItemsViewModel : ScreenViewModelBase
         ? "Change the details and click Save."
         : "Fill in the details and click Save.";
 
-    /// <summary>Explains what the logged-in role may do on this screen.</summary>
-    public string PermissionHint => _session.Role switch
-    {
-        Session.Owner => "Owner: you can view, add, edit and delete items.",
-        Session.Manager => "Manager: you can view, add and edit items. Deleting items is not allowed.",
-        _ => "Cashier: you can view and edit items. Adding and deleting items is not allowed.",
-    };
+    // ---------------- What this role can see ----------------
+    // Buttons the user is not allowed to use are hidden, not just blocked.
+
+    /// <summary>The "Stock value" card (owners and managers).</summary>
+    public bool CanSeeStockValue => _session.CanSeeStockValue;
+
+    /// <summary>The "New item" button (owners and managers).</summary>
+    public bool CanAddItems => _session.CanAddItem;
+
+    /// <summary>The form is shown while editing, or for roles that may add items.</summary>
+    public bool ShowForm => IsEditing || _session.CanAddItem;
+
+    /// <summary>The "Delete item" button (owners, while an item is selected).</summary>
+    public bool ShowDeleteButton => IsEditing && _session.CanDeleteItem;
 
     // ---------------- Commands (bound to buttons) ----------------
 
@@ -206,11 +213,7 @@ public class ItemsViewModel : ScreenViewModelBase
 
         if (ok && saved != null)
         {
-            SelectedItem = Items.FirstOrDefault(i => i.Id == saved.Id);
-            if (SelectedItem == null)
-            {
-                LoadIntoForm(saved); // saved, but hidden by the current search
-            }
+            ClearForm(); // done: empty the form, ready for the next one
             ShowStatus(wasEditing ? $"Item \"{saved.Name}\" was updated." : $"Item \"{saved.Name}\" was added.");
         }
     }
@@ -303,6 +306,8 @@ public class ItemsViewModel : ScreenViewModelBase
         OnPropertyChanged(nameof(IsEditing));
         OnPropertyChanged(nameof(FormTitle));
         OnPropertyChanged(nameof(FormSubtitle));
+        OnPropertyChanged(nameof(ShowForm));
+        OnPropertyChanged(nameof(ShowDeleteButton));
     }
 
     /// <summary>
